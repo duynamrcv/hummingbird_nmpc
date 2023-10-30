@@ -42,7 +42,7 @@ class Hummingbird:
         
         # Create NMPC controller
         N = 10
-        self.controller = Controller(t_horizon=5*N*0.1,n_nodes=N)
+        self.controller = Controller(t_horizon=3*N*0.1,n_nodes=N)
 
         self.rate = rospy.Rate(10)
         
