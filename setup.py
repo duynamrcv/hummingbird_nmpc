@@ -1,11 +1,9 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
+from catkin_pkg.python_setup import generate_distutils_setup
 
-setup(
-    name='NMPC for Quadrotors',
-    version='0.0.0',
-
-    author='Duy Nam Bui',
-    author_email='duynam.robotics@gmail.com',
-
-    packages=find_packages(exclude=[]),
+setup_args = generate_distutils_setup(
+    packages=['hummingbird_nmpc'],
+    package_dir={'': 'src'},
 )
+
+setup(**setup_args)

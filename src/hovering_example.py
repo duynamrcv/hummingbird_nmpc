@@ -59,11 +59,12 @@ class Hummingbird:
             
             current = np.concatenate([p, q, v, w])
             angular_velocity = self.controller.run_optimization(initial_state=current, goal=hover_position)
-            print(self.odom)
+            # print(self.odom)
             # print(angular_velocity)
             ac_msg = Actuators()
             # ac_msg.angular_velocities = [470, 470, 470, 470]
             ac_msg.angular_velocities = angular_velocity
+            print(angular_velocity)
             self.ac_pub.publish(ac_msg)
             self.rate.sleep()
 

@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   mav_msgs
+  message_generation
 )
 catkin_package(
 #  INCLUDE_DIRS include
