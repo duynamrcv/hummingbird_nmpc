@@ -35,16 +35,17 @@ class Hummingbird:
         except:
             rospy.logwarn("{} not available".format(UNPAUSE_SERVICE))
     
-        self.ac_pub = rospy.Publisher(rospy.get_namespace()+SPEED_COMMAND_TOPIC, Actuators, queue_size=10)
+        control_rate = 20
+        self.ac_pub = rospy.Publisher(rospy.get_namespace()+SPEED_COMMAND_TOPIC, Actuators, queue_size=control_rate)
         rospy.Subscriber(rospy.get_namespace()+ODOMETRY_TOPIC,Odometry,self.odomCallback)
         
         self.odom = Odometry()
         
         # Create NMPC controller
-        N = 10
-        self.controller = Controller(t_horizon=3*N*0.1,n_nodes=N)
+        N = 20
+        self.controller = Controller(t_horizon=3*N/control_rate,n_nodes=N)
 
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(control_rate)
         
     def odomCallback(self,data:Odometry):
         self.odom = data

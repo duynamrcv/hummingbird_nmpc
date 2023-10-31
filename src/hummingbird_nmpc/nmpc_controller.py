@@ -37,14 +37,14 @@ class Controller:
 
         # Weighted squared error loss function q = (p_xyz, a_xyz, v_xyz, r_xyz), r = (u1, u2, u3, u4)
         if q_cost is None:
-            q_cost = np.array([100, 100, 100, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            q_cost = np.array([10, 10, 10, 0.1, 0.1, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05])
         if r_cost is None:
             r_cost = np.array([0.1, 0.1, 0.1, 0.1])
 
         self.T = t_horizon  # Time horizon
         self.N = n_nodes    # Number of control nodes within horizon
 
-        self.max_u = 1.0    # 100% thrust
+        self.max_u = MAX_THRUST    # 100% thrust
         self.min_u = 0.0    # 0% thrust
 
         # Declare model variables
@@ -137,7 +137,7 @@ class Controller:
             ocp.constraints.idxbu = np.array([0, 1, 2, 3])
 
             # Solver options
-            ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+            ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
             ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
             ocp.solver_options.integrator_type = 'ERK'
             ocp.solver_options.print_level = 0
@@ -238,7 +238,7 @@ class Controller:
         by Faessler et al. None, if no linear compensation is to be used.
         """
 
-        f_thrust = self.u * MAX_THRUST
+        f_thrust = self.u
         g = cs.vertcat(0.0, 0.0, 9.81)
         a_thrust = cs.vertcat(0.0, 0.0, f_thrust[0] + f_thrust[1] + f_thrust[2] + f_thrust[3]) / self.mass
 
@@ -253,8 +253,7 @@ class Controller:
         return v_dynamics
 
     def w_dynamics(self):
-        f_thrust = self.u * MAX_THRUST
-
+        f_thrust = self.u
         x_f = cs.MX(self.x_f)
         y_f = cs.MX(self.y_f)
         c_f = cs.MX(self.z_l_tau)
@@ -312,7 +311,8 @@ class Controller:
             x_opt_acados[i + 1, :] = self.acados_ocp_solver[use_model].get(i + 1, "x")
 
         w_opt_acados = np.reshape(w_opt_acados, (-1))
-        thrust = w_opt_acados[:4]*MAX_THRUST
+        thrust = w_opt_acados[:4]
+
         angular_speed = np.sqrt(thrust/self.cf)
         return angular_speed
 
