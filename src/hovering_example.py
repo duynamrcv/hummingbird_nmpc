@@ -19,7 +19,7 @@ from hummingbird_nmpc.nmpc_controller import Controller
 import numpy as np
 
 SPEED_COMMAND_TOPIC = "command/motor_speed"
-ODOMETRY_TOPIC = "ground_truth/odometry"
+ODOMETRY_TOPIC = "odometry_sensor1/odometry"
 
 UNPAUSE_SERVICE = "/gazebo/unpause_physics"
 
@@ -50,7 +50,7 @@ class Hummingbird:
     def odomCallback(self,data:Odometry):
         self.odom = data
 
-    def hovering(self,hover_position = np.array([0,0,1])):
+    def hovering(self,hover_position = np.array([0.0,0.0,1.0])):
         while not rospy.is_shutdown():
             p = np.array([self.odom.pose.pose.position.x, self.odom.pose.pose.position.y, self.odom.pose.pose.position.z])
             q = np.array([self.odom.pose.pose.orientation.w, self.odom.pose.pose.orientation.x, 
@@ -60,10 +60,9 @@ class Hummingbird:
             
             current = np.concatenate([p, q, v, w])
             angular_velocity = self.controller.run_optimization(initial_state=current, goal=hover_position)
-            # print(self.odom)
+            print(p)
             # print(angular_velocity)
             ac_msg = Actuators()
-            # ac_msg.angular_velocities = [470, 470, 470, 470]
             ac_msg.angular_velocities = angular_velocity
             print(angular_velocity)
             self.ac_pub.publish(ac_msg)
