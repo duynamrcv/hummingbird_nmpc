@@ -199,62 +199,46 @@ class CubicSpline3D:
         yaw = math.atan2(dy, dx)
         return yaw
 
+# def main_2d():  # pragma: no cover
+#     print("CubicSpline1D 2D test")
+#     import matplotlib.pyplot as plt
+#     x = [-2.5, 2.5, 7.5]
+#     y = [0.7, 5, 0.0]
+#     z = [5, 6, 4]
+#     ds = 0.1  # [m] distance of each interpolated points
 
-def calc_spline_course(x, y, ds=0.1):
-    sp = CubicSpline3D(x, y)
-    s = list(np.arange(0, sp.s[-1], ds))
+#     sp = CubicSpline3D(x, y, z)
+#     s = np.arange(0, sp.s[-1], ds)
 
-    rx, ry, rz, ryaw = [], [], [], []
-    for i_s in s:
-        ix, iy = sp.calc_position(i_s)
-        rx.append(ix)
-        ry.append(iy)
-        rz.append(iz)
-        ryaw.append(sp.calc_yaw(i_s))
+#     rx, ry, rz, ryaw = [], [], [], []
+#     for i_s in s:
+#         ix, iy, iz = sp.calc_position(i_s)
+#         rx.append(ix)
+#         ry.append(iy)
+#         rz.append(iz)
+#         ryaw.append(sp.calc_yaw(i_s))
 
-    return rx, ry, rz, ryaw
+#     plt.figure()
+#     ax = plt.axes(projection='3d')
+#     ax.plot(x, y, z, "xb", label="Data points")
+#     ax.scatter(rx, ry, rz, "-r", label="Cubic spline path")
+#     ax.grid(True)
+#     # ax.axis('equal')
+#     ax.set_xlabel("x[m]")
+#     ax.set_ylabel("y[m]")
+#     ax.set_zlabel("z[m]")
+#     plt.legend()
 
+#     plt.figure()
+#     plt.plot(s, [np.rad2deg(iyaw) for iyaw in ryaw], "-r", label="yaw")
+#     plt.grid(True)
+#     plt.legend()
+#     plt.xlabel("line length[m]")
+#     plt.ylabel("yaw angle[deg]")
 
-def main_2d():  # pragma: no cover
-    print("CubicSpline1D 2D test")
-    import matplotlib.pyplot as plt
-    x = [-2.5, 2.5, 7.5]
-    y = [0.7, 5, 0.0]
-    z = [5, 6, 4]
-    ds = 0.1  # [m] distance of each interpolated points
-
-    sp = CubicSpline3D(x, y, z)
-    s = np.arange(0, sp.s[-1], ds)
-
-    rx, ry, rz, ryaw = [], [], [], []
-    for i_s in s:
-        ix, iy, iz = sp.calc_position(i_s)
-        rx.append(ix)
-        ry.append(iy)
-        rz.append(iz)
-        ryaw.append(sp.calc_yaw(i_s))
-
-    plt.figure()
-    ax = plt.axes(projection='3d')
-    ax.plot(x, y, z, "xb", label="Data points")
-    ax.scatter(rx, ry, rz, "-r", label="Cubic spline path")
-    ax.grid(True)
-    # ax.axis('equal')
-    ax.set_xlabel("x[m]")
-    ax.set_ylabel("y[m]")
-    ax.set_zlabel("z[m]")
-    plt.legend()
-
-    plt.figure()
-    plt.plot(s, [np.rad2deg(iyaw) for iyaw in ryaw], "-r", label="yaw")
-    plt.grid(True)
-    plt.legend()
-    plt.xlabel("line length[m]")
-    plt.ylabel("yaw angle[deg]")
-
-    plt.show()
+#     plt.show()
 
 
-if __name__ == '__main__':
-    # main_1d()
-    main_2d()
+# if __name__ == '__main__':
+#     # main_1d()
+#     main_2d()

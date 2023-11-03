@@ -14,8 +14,7 @@ import casadi as cs
 import numpy as np
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosModel
 from hummingbird_nmpc.utils import skew_symmetric, v_dot_q, quaternion_inverse
-
-MAX_THRUST = 20.0
+from hummingbird_nmpc.config import *
 
 class Controller:
     def __init__(self, t_horizon=1, n_nodes=20,
