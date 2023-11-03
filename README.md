@@ -32,7 +32,21 @@ Add two paths below to ```~/.bashrc``` in order to add the compiled shared libra
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"<acados_root>/lib"
 export ACADOS_SOURCE_DIR="<acados_root>"
 ```
-## Install dependence libraries
+### Install dependence libraries
 ```
 pip install -r requirement.txt
+```
+
+##  State Diagrams
+```mermaid
+stateDiagram
+    [*] --> IDLE
+    IDLE --> [*]
+    IDLE --> TAKE_OFF
+
+    TAKE_OFF --> HOVERING
+    HOVERING --> TRACKING
+    TRACKING --> HOVERING
+    HOVERING --> LANDING
+    LANDING --> IDLE
 ```
