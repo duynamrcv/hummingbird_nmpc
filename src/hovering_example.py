@@ -14,9 +14,11 @@ from std_srvs.srv import Empty
 from mav_msgs.msg import Actuators
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
+from std_msgs.msg import UInt8
 
 import numpy as np
 from hummingbird_nmpc.nmpc_controller import Controller
+from hummingbird_nmpc.state import State
 from hummingbird_nmpc.config import *
 
 class Hummingbird:
@@ -28,11 +30,16 @@ class Hummingbird:
             rospy.wait_for_service(UNPAUSE_SERVICE, timeout=5.0)
             rospy.ServiceProxy(UNPAUSE_SERVICE,Empty)()
             rospy.loginfo("Unpause physics Gazebo")
+            self.state = State.TAKE_OFF
         except:
             rospy.logwarn("{} not available".format(UNPAUSE_SERVICE))
 
+        # State
+        self.state = State.IDLE
+
         # Publisher
-        self.ac_pub = rospy.Publisher(rospy.get_namespace()+SPEED_COMMAND_TOPIC, Actuators, queue_size=CONTROL_RATE)
+        self.pub_ac = rospy.Publisher(rospy.get_namespace()+SPEED_COMMAND_TOPIC, Actuators, queue_size=CONTROL_RATE)
+        self.pub_state = rospy.Publisher(rospy.get_namespace()+STATE_TOPIC, UInt8, queue_size=CONTROL_RATE)
 
         # Subscriber
         rospy.Subscriber(rospy.get_namespace()+ODOMETRY_TOPIC, Odometry, self.odomCallback)
@@ -40,6 +47,7 @@ class Hummingbird:
         
         self.odom = Odometry()
         self.goal = PoseStamped()
+        self.angular_velocity = np.zeros(4)
         
         # Create NMPC controller
         N = 20
@@ -55,38 +63,62 @@ class Hummingbird:
             self.goal = data
             if data.header.frame_id == "":
                 self.goal.header.frame_id == "world"
-            
+    
+    def publishState(self):
+        msg_state = UInt8()
+        msg_state.data = self.state.value
+        self.pub_state.publish(msg_state)
+
+    def publishActuators(self):
+        msg_ac = Actuators()
+        msg_ac.angular_velocities = self.angular_velocity
+        self.pub_ac.publish(msg_ac)
+
+    def takeOff(self):
+        # Prepare goal
+        pg = np.array([self.odom.pose.pose.position.x, self.odom.pose.pose.position.y, 1.0])
+        qg = np.array([1,0,0,0])
+        vg = np.array([0,0,0])
+        wg = np.array([0,0,0])
+        
+        # Goal state
+        target = np.concatenate([pg, qg, vg, wg])
+        mode = 'pose'
+
+        # Current state
+        current = self.getCurrentState()
+
+        # NMPC Solve
+        self.angular_velocity = self.controller.run_optimization(initial_state=current, goal=target, mode=mode)
 
     def execute(self):
         while not rospy.is_shutdown():
+            if self.state == State.IDLE:
+                self.state = State.TAKE_OFF
+            elif self.state == State.TAKE_OFF:
+                self.takeOff()
+            elif self.state == State.HOVERING:
+                pass
+            elif self.state == State.TRACKING:
+                pass
+            elif self.state == State.LANDING:
+                pass
 
-            # Current state
-            p = np.array([self.odom.pose.pose.position.x, self.odom.pose.pose.position.y, self.odom.pose.pose.position.z])
-            q = np.array([self.odom.pose.pose.orientation.w, self.odom.pose.pose.orientation.x, 
-                            self.odom.pose.pose.orientation.y, self.odom.pose.pose.orientation.z])
-            v = np.array([self.odom.twist.twist.linear.x, self.odom.twist.twist.linear.y, self.odom.twist.twist.linear.z])
-            w = np.array([self.odom.twist.twist.angular.x, self.odom.twist.twist.angular.y, self.odom.twist.twist.angular.z])
-            current = np.concatenate([p, q, v, w])
-            
-            # Goal state
-            target = np.array([0,0,1, 1,0,0,0, 0,0,0, 0,0,0])
-            if self.goal != PoseStamped():
-                pg = np.array([self.goal.pose.position.x, self.goal.pose.position.y, self.goal.pose.position.z])
-                qg = np.array([self.goal.pose.orientation.w, self.goal.pose.orientation.x, 
-                                self.goal.pose.orientation.y, self.goal.pose.orientation.z])
-                vg = np.array([0,0,0])
-                wg = np.array([0,0,0])
-                target = np.concatenate([pg, qg, vg, wg])
+            # Publish topics
+            self.publishActuators()
+            self.publishState()
 
-            # NMPC Solve
-            angular_velocity = self.controller.run_optimization(initial_state=current, goal=target)
-            
-            # Send command
-            ac_msg = Actuators()
-            ac_msg.angular_velocities = angular_velocity
-            print(angular_velocity)
-            self.ac_pub.publish(ac_msg)
+            # Sleep
             self.rate.sleep()
+
+    def getCurrentState(self):
+        p = np.array([self.odom.pose.pose.position.x, self.odom.pose.pose.position.y, self.odom.pose.pose.position.z])
+        q = np.array([self.odom.pose.pose.orientation.w, self.odom.pose.pose.orientation.x, 
+                        self.odom.pose.pose.orientation.y, self.odom.pose.pose.orientation.z])
+        v = np.array([self.odom.twist.twist.linear.x, self.odom.twist.twist.linear.y, self.odom.twist.twist.linear.z])
+        w = np.array([self.odom.twist.twist.angular.x, self.odom.twist.twist.angular.y, self.odom.twist.twist.angular.z])
+        current = np.concatenate([p, q, v, w])
+        return current
 
 if __name__ == "__main__":
     try:
