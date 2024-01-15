@@ -53,7 +53,7 @@ class Hummingbird:
         self.hover_state = None
         
         # Create NMPC controller
-        self.controller = Controller(t_horizon=2*N/CONTROL_RATE,n_nodes=N)
+        self.controller = Controller(t_horizon=3*N/CONTROL_RATE,n_nodes=N)
 
         self.rate = rospy.Rate(CONTROL_RATE)
         
